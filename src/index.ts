@@ -2,8 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import authRouter from "./routes/auth.routes.js";
-import productRouter from "./routes/product.routes.js"
-import orderRouter from "./routes/order.route.js"
 import { createSuperAdmin } from "./controllers/auth.controller.js";
 
 dotenv.config();
@@ -14,8 +12,6 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/v1/auth" , authRouter );
-app.use("/api/v1/product" , productRouter );
-app.use("/api/v1/order" , orderRouter )
 
 mongoose
   .connect(process.env.MONGO_URI as string)
