@@ -1,14 +1,11 @@
-import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { JWTPayload } from "../utils/jwt.util";
 
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET as string;
-console.log(JWT_SECRET);
 
 export interface AuthRequest extends Request { // extend Request to include user property
-  user?: any;
+  user?: JWTPayload;
 }
 
 export const authenticate = async (
@@ -27,7 +24,7 @@ export const authenticate = async (
   const token = authHeader.split(" ")[1]; // split token seperated by space -> Bearer_Token
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, env.JWT_SECRET) as JWTPayload;
     req.user = payload; // attach user payload to request
     next();
   } catch (error) {

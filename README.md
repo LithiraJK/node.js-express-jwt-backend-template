@@ -5,14 +5,15 @@ A production-ready template for building modern Node.js backend applications wit
 ## 🚀 Template Features
 
 - **📦 Ready-to-Use Boilerplate**: Complete project structure with all essential components
-- **🔷 TypeScript**: Full TypeScript support with ES modules and modern configuration
+- **🔷 TypeScript**: Full TypeScript support with CommonJS modules and strict type checking
 - **🔐 JWT Authentication**: Complete authentication system with token-based security
 - **👥 Role-Based Access Control**: Multi-role system (Customer, Admin, Super Admin)
 - **🗄️ MongoDB Integration**: Pre-configured Mongoose models and database connection
-- **🛡️ Security Features**: Password hashing, input validation, and secure configurations
-- **⚡ Development Ready**: Hot-reload development server with TypeScript compilation
-- **🏗️ Clean Architecture**: Organized folder structure following best practices
-- **🔧 Environment Configuration**: Secure environment variable management with .env
+- **🛡️ Security Features**: Password hashing with bcryptjs, JWT tokens, and secure configurations
+- **⚡ Development Ready**: Hot-reload development server with ts-node-dev
+- **🏗️ Clean Architecture**: Organized folder structure following MVC best practices
+- **🔧 Environment Configuration**: Centralized environment variable management with validation
+- **🌐 CORS Support**: Pre-configured CORS middleware for cross-origin requests
 - **📚 Comprehensive Documentation**: Well-documented code and API endpoints
 
 ## 📋 Prerequisites
@@ -46,19 +47,29 @@ Before running this application, make sure you have the following installed:
    Create a `.env` file in the root directory and customize these variables:
    ```env
    # Server Configuration
+   NODE_ENV=development
    PORT=3000
    HOST=localhost
 
    # Database (Replace with your MongoDB connection string)
-   MONGO_URI=mongodb://localhost:27017/your-database-name
+   MONGODB_URI=mongodb://localhost:27017/your-database-name
 
-   # Super Admin Credentials (Customize these)
-   SUPER_ADMIN_EMAIL=admin@yourdomain.com
-   SUPER_ADMIN_PW=your-secure-admin-password
+   # Super Admin Credentials (Customize these - REQUIRED)
+   SUPERADMIN_EMAIL=admin@yourdomain.com
+   SUPERADMIN_PASSWORD=your-secure-admin-password
 
-   # JWT Configuration (Generate a secure secret)
+   # JWT Configuration (Generate a secure secret - REQUIRED)
    JWT_SECRET=your-jwt-secret-key-here
+   JWT_EXPIRES_IN=7d
+
+   # Security
+   BCRYPT_ROUNDS=10
+
+   # CORS Configuration
+   CORS_ORIGIN=*
    ```
+
+   **⚠️ Important**: `MONGODB_URI` and `JWT_SECRET` are required and validated on startup.
 
 4. **Customize the project**
    - Update `package.json` with your project details
@@ -89,17 +100,21 @@ The server will start on `http://localhost:3000` (or your configured port).
 
 ```
 src/
-├── controllers/          # Request handlers and business logic
+├── config/              # Configuration files
+│   └── env.ts           # Environment variables with validation
+├── controllers/         # Request handlers and business logic
 │   └── auth.controller.ts
-├── middlewares/          # Custom middleware functions
+├── middlewares/         # Custom middleware functions
 │   ├── auth.middleware.ts
 │   └── role.middleware.ts
 ├── models/              # Database models and schemas
 │   └── user.model.ts
 ├── routes/              # API route definitions
 │   └── auth.routes.ts
+├── services/            # Business logic services (expandable)
 ├── utils/               # Utility functions
 │   └── jwt.util.ts
+├── validators/          # Request validation schemas (expandable)
 └── index.ts             # Application entry point
 ```
 
@@ -171,37 +186,45 @@ POST /api/v1/auth/login
 ### TypeScript Configuration
 The project uses modern TypeScript configuration with:
 - ES2020 target
-- NodeNext module resolution
+- CommonJS module system
 - Strict type checking enabled
+- ESM interoperability
+- Source maps for debugging
 
 ### Dependencies
 
 **Production Dependencies:**
-- `express`: Web framework
-- `mongoose`: MongoDB ODM
-- `bcryptjs`: Password hashing
-- `jsonwebtoken`: JWT implementation
-- `dotenv`: Environment configuration
+- `express` (v5.1.0): Fast, unopinionated web framework
+- `mongoose` (v8.19.1): MongoDB object modeling tool
+- `bcryptjs` (v3.0.2): Password hashing library
+- `jsonwebtoken` (v9.0.2): JWT implementation for authentication
+- `dotenv` (v17.2.3): Environment variable loader
+- `cors` (v2.8.5): Cross-Origin Resource Sharing middleware
 
 **Development Dependencies:**
-- `typescript`: TypeScript compiler
-- `ts-node-dev`: Development server
-- `@types/*`: Type definitions
+- `typescript` (v5.9.3): TypeScript compiler
+- `ts-node-dev` (v2.0.0): Development server with hot reload
+- `ts-node` (v10.9.2): TypeScript execution environment
+- `@types/*`: Type definitions for TypeScript
 
 ## 🚦 Initial Setup
 
 On first run, the application automatically:
-1. Connects to MongoDB
-2. Creates a Super Admin account (if it doesn't exist)
-3. Sets up the database schema
+1. Validates required environment variables (MONGODB_URI, JWT_SECRET)
+2. Connects to MongoDB
+3. Creates a Super Admin account using credentials from `.env` (if it doesn't exist)
+4. Sets up the database schema
+
+**Note**: The super admin account will only be created once. If a super admin already exists, the system will skip creation.
 
 ## 🛡️ Security Features
 
-- Password hashing using bcryptjs
-- JWT token-based authentication
-- Role-based access control
-- Environment variable protection
-- Input validation and sanitization
+- **Password Hashing**: Using bcryptjs with configurable salt rounds (default: 10)
+- **JWT Token Authentication**: Secure token-based authentication with configurable expiration
+- **Role-Based Access Control**: Middleware for protecting routes by user roles
+- **Environment Variable Protection**: Centralized config with runtime validation
+- **CORS Configuration**: Configurable cross-origin resource sharing
+- **Input Validation**: Ready-to-extend validators directory for request validation
 
 ## 📝 API Documentation
 
@@ -216,33 +239,47 @@ Authorization: Bearer <your-jwt-token>
 ### What's Included
 
 This template provides:
-- ✅ Complete authentication system with JWT
-- ✅ User registration and login endpoints
-- ✅ Role-based middleware for route protection
-- ✅ MongoDB integration with Mongoose
-- ✅ TypeScript configuration and build setup
-- ✅ Development and production scripts
-- ✅ Security best practices implementation
+- ✅ Complete authentication system with JWT (login, register)
+- ✅ User registration and admin registration endpoints
+- ✅ Role-based middleware for route protection (Customer, Admin, SuperAdmin)
+- ✅ MongoDB integration with Mongoose ODM
+- ✅ TypeScript configuration with strict type checking
+- ✅ Development and production build scripts
+- ✅ Centralized environment configuration with validation
+- ✅ Security best practices (password hashing, JWT tokens)
+- ✅ CORS middleware pre-configured
 - ✅ Clean project structure following MVC pattern
+- ✅ Auto-creation of super admin on first run
 
 ### Customization Guide
 
 1. **Update Project Information**
-   - Change the project name in `package.json`
-   - Update the database name in your connection string
+   - Change the project name and description in `package.json`
+   - Update the database name in your `MONGODB_URI` connection string
+   - Configure `CORS_ORIGIN` for your specific domain(s)
 
 2. **Extend the User Model**
    - Add additional fields to the User schema in `src/models/user.model.ts`
-   - Update registration/login controllers accordingly
+   - Update registration/login controllers in `src/controllers/auth.controller.ts`
+   - Modify the JWT payload in `src/utils/jwt.util.ts` if needed
 
 3. **Add New Routes**
    - Create new route files in `src/routes/`
    - Add corresponding controllers in `src/controllers/`
-   - Register routes in `src/index.ts`
+   - Register routes in `src/index.ts` (e.g., `app.use("/api/v1/your-route", yourRouter)`)
 
 4. **Add Middleware**
    - Create custom middleware in `src/middlewares/`
-   - Use existing auth and role middleware as examples
+   - Use existing `auth.middleware.ts` and `role.middleware.ts` as examples
+   - Apply middleware to routes as needed
+
+5. **Add Services**
+   - Create service files in `src/services/` for business logic
+   - Keep controllers thin by moving complex logic to services
+
+6. **Add Validators**
+   - Create validation schemas in `src/validators/`
+   - Use libraries like `joi` or `express-validator` for request validation
 
 ## 🤝 Contributing
 
@@ -263,20 +300,24 @@ This project is licensed under the ISC License.
 ### Common Issues
 
 1. **MongoDB Connection Error**
-   - Ensure MongoDB is running
-   - Check your MONGO_URI in the .env file
+   - Ensure MongoDB is running locally or your MongoDB Atlas cluster is accessible
+   - Verify your `MONGODB_URI` in the .env file is correct
+   - Check network connectivity and firewall settings
 
 2. **Port Already in Use**
-   - Change the PORT in your .env file
-   - Kill any processes using the current port
+   - Change the `PORT` value in your .env file
+   - On Windows: `netstat -ano | findstr :<PORT>` to find and kill the process
 
 3. **JWT Token Issues**
-   - Ensure JWT_SECRET is set in your environment variables
-   - Check token expiration settings
+   - Ensure `JWT_SECRET` is set in your environment variables
+   - Check token expiration settings (`JWT_EXPIRES_IN`)
+   - Verify the Authorization header format: `Bearer <token>`
 
-## 📞 Support
+4. **Environment Variable Validation Error**
+   - The app validates `MONGODB_URI` and `JWT_SECRET` on startup
+   - Ensure these variables are set in your `.env` file
+   - Check for typos in environment variable names
 
-For support and questions, please create an issue in the repository or contact the development team.
 
 ## ⭐ Template Usage
 
@@ -286,16 +327,23 @@ If you found this template helpful, please consider giving it a star! Feel free 
 
 Future improvements planned for this template:
 - [ ] Email verification system
-- [ ] Password reset functionality
-- [ ] API rate limiting
+- [ ] Password reset functionality  
+- [ ] Refresh token implementation
+- [ ] API rate limiting middleware
+- [ ] Request validation with express-validator or joi
 - [ ] Swagger/OpenAPI documentation
-- [ ] Docker configuration
-- [ ] Unit and integration tests
-- [ ] Logging system with Winston
-- [ ] Database migrations
+- [ ] Docker configuration with docker-compose
+- [ ] Unit and integration tests with Jest
+- [ ] Logging system with Winston or Pino
+- [ ] Database seeding scripts
+- [ ] File upload handling with multer
+- [ ] Error handling middleware
 
 ---
 
 **📋 Template for Node.js + Express.js + JWT + TypeScript + MongoDB**
+
+**Version:** 1.0.0  
+**License:** ISC
 
 Made with ❤️ for the developer community

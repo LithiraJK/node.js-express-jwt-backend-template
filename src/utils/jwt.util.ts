@@ -1,14 +1,33 @@
-import jwt from "jsonwebtoken"
-import dotenv from "dotenv"
-import { IUser } from "../models/user.model.js"
+import jwt from "jsonwebtoken";
+import { IUser } from "../models/user.model";
+import { env } from "../config/env";
 
-
-dotenv.config()
-
-const JWT_SECRET = process.env.JWT_SECRET as string
-
-export const signAccessToken = (user : IUser) => {
-    return jwt.sign({ sub: user._id as string , roles: user.roles ,email : user.email , firstName : user.firstName , lastName : user.lastName }, JWT_SECRET, { expiresIn: "1D" });
+// JWT Payload interface for type safety
+export interface JWTPayload {
+  sub: string;
+  roles: string[];
+  email: string;
+  firstName: string;
+  lastName: string;
+  iat?: number;
+  exp?: number;
 }
 
-export default signAccessToken
+/**
+ * Signs an access token for the given user
+ * @param user - User object to generate token for
+ * @returns JWT access token string
+ */
+export const signAccessToken = (user: IUser): string => {
+  const payload: JWTPayload = {
+    sub: user._id!.toString(),
+    roles: user.roles,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  };
+
+  return jwt.sign(payload, env.JWT_SECRET, { 
+    expiresIn: env.JWT_EXPIRES_IN
+  } as jwt.SignOptions);
+};

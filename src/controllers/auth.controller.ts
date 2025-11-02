@@ -1,19 +1,17 @@
 import bcrypt from "bcryptjs";
-import { Role, User } from "../models/user.model.js";
+import { Role, User } from "../models/user.model";
 import { Request, Response } from "express";
-import signAccessToken from "../utils/jwt.util.js";
+import { signAccessToken } from "../utils/jwt.util";
 import dotenv from "dotenv";
 
 export const createSuperAdmin = async () => {
   
   dotenv.config();
-  const adminpw = process.env.SUPER_ADMIN_PW as string;
-  const adminemail = process.env.SUPER_ADMIN_EMAIL;
+  const adminpw = process.env.SUPERADMIN_PASSWORD as string;
+  const adminemail = process.env.SUPERADMIN_EMAIL;
 
   try {
     const existsSuperAdmin = await User.findOne({ roles: [Role.SUPERADMIN] });
-    console.log(existsSuperAdmin);
-
     if (existsSuperAdmin) {
       return console.log("Super Admin Already Exists");
     }
@@ -35,6 +33,7 @@ export const createSuperAdmin = async () => {
     console.log("Error creating super admin");
   }
 };
+
 
 export const registerUser = async (req: Request, res: Response) => {
   try {

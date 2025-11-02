@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
-import { Role } from "../models/user.model.js";
-import { AuthRequest } from "./auth.middleware.js";
+import { Role } from "../models/user.model";
+import { AuthRequest } from "./auth.middleware";
 
 export const requireRole = (roles: Role[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -11,7 +11,7 @@ export const requireRole = (roles: Role[]) => {
     }
 
     const hasRequiredRole = roles.some((role) =>
-      req.user.roles?.includes(role)
+      req.user?.roles?.includes(role)
     );
 
     if (!hasRequiredRole) {

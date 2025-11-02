@@ -1,35 +1,33 @@
 import express from "express";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
-import authRouter from "./routes/auth.routes.js";
-import { createSuperAdmin } from "./controllers/auth.controller.js";
+import authRouter from "./routes/auth.routes";
+import { createSuperAdmin } from "./controllers/auth.controller";
+import cors from "cors";
+import { env } from "./config/env";
 
-dotenv.config();
-console.log(process.env.MONGO_URI)
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 app.use("/api/v1/auth" , authRouter );
 
 mongoose
-  .connect(process.env.MONGO_URI as string)
+  .connect(env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB");
+    createSuperAdmin();
   })
   .catch((error) => {
     console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   });
-
-
-createSuperAdmin()
-
-
+  
 app.listen(process.env.PORT, () => {
   console.log(
-    `Server id running on http://${process.env.HOST}:${process.env.PORT}`
+    `Server is running on http://${env.HOST}:${env.PORT}`
   );
 });
+
 
