@@ -1,14 +1,12 @@
 import bcrypt from "bcryptjs";
 import { Role, User } from "../models/user.model";
-import { Request, Response } from "express";
+import e, { Request, Response } from "express";
 import { signAccessToken } from "../utils/jwt.util";
-import dotenv from "dotenv";
+import { sendSuccess, sendError } from "../utils/api.response.util";
+import { env } from "../config/env";
 
 export const createSuperAdmin = async () => {
-  
-  dotenv.config();
-  const adminpw = process.env.SUPERADMIN_PASSWORD as string;
-  const adminemail = process.env.SUPERADMIN_EMAIL;
+
 
   try {
     const existsSuperAdmin = await User.findOne({ roles: [Role.SUPERADMIN] });
@@ -16,12 +14,12 @@ export const createSuperAdmin = async () => {
       return console.log("Super Admin Already Exists");
     }
     
-    const hashedPassword = bcrypt.hashSync(adminpw, 10);
+    const hashedPassword = bcrypt.hashSync(env.SUPERADMIN_PASSWORD, 10);
 
     await User.create({
-      email: adminemail,
-      firstName: "SUPER",
-      lastName: "ADMIN",
+      email: env.SUPERADMIN_EMAIL,
+      firstName: env.SUPERADMIN_FIRST_NAME,
+      lastName: env.SUPERADMIN_LAST_NAME,
       password: hashedPassword,
       roles: [Role.SUPERADMIN],
       isBlock: false,
@@ -35,16 +33,15 @@ export const createSuperAdmin = async () => {
 };
 
 
-export const registerUser = async (req: Request, res: Response) => {
+export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, firstName, lastName, password, profileimg } = req.body;
 
     const existUser = await User.findOne({ email });
 
     if (existUser) {
-      return res.status(400).json({
-        message: "User already exists with this email",
-      });
+      sendError(res, 400, "User already exists with this email");
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -59,40 +56,36 @@ export const registerUser = async (req: Request, res: Response) => {
       profileimg: profileimg,
     });
 
-    res.json({
-      message: "User Registered Successfully",
-      data: {
+    const token = signAccessToken(newUser);
+
+    sendSuccess(res, 201, "User registered successfully", {
+      token,
+      user: {
         id: newUser._id,
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         roles: newUser.roles,
         profileimg: newUser.profileimg,
-      },
+      }
     });
-
-    console.log(newUser);
   } catch (error) {
-    res.status(500).json({
-      message: "Internal Server Error",
-      error: error,
-    });
+    sendError(res, 500, "Internal Server Error", error instanceof Error ? error.message : "Unknown error");
   }
 };
 
-export const registerAdmin = async (req: Request, res: Response) => {
+export const registerAdmin = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, firstName, lastName, password, profileimg } = req.body;
 
     const existsAdmin = await User.findOne({ email });
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-
     if (existsAdmin) {
-      return res.status(400).json({
-        message: "Admin already exists !",
-      });
+      sendError(res, 400, "Admin already exists!");
+      return;
     }
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
 
     const newAdmin = await User.create({
       email: email,
@@ -104,52 +97,55 @@ export const registerAdmin = async (req: Request, res: Response) => {
       profileimg: profileimg,
     });
 
-    res.status(201).json({
-      message: "Admin Create Successfully !",
-      data: {
+    const token = signAccessToken(newAdmin);
+
+    sendSuccess(res, 201, "Admin created successfully!", {
+      token,
+      user: {
         id: newAdmin._id,
         email: newAdmin.email,
         firstName: newAdmin.firstName,
         lastName: newAdmin.lastName,
         roles: newAdmin.roles,
         profileimg: newAdmin.profileimg,
-      },
+      }
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Internal Server Error",
-    });
+    sendError(res, 500, "Internal Server Error", error instanceof Error ? error.message : "Unknown error");
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
 
-  const existUser = await User.findOne({ email });
+    const existUser = await User.findOne({ email });
 
-  if (!existUser) {
-    return res.status(400).json({
-      message: "Invalid credentials with email",
+    if (!existUser) {
+      sendError(res, 401, "Invalid credentials");
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, existUser.password);
+
+    if (!isPasswordValid) {
+      sendError(res, 401, "Invalid credentials");
+      return;
+    }
+
+    const accessToken = signAccessToken(existUser);
+
+    sendSuccess(res, 200, "User logged in successfully", {
+      token: accessToken,
+      user: {
+        id: existUser._id,
+        email: existUser.email,
+        firstName: existUser.firstName,
+        lastName: existUser.lastName,
+        roles: existUser.roles,
+      }
     });
+  } catch (error) {
+    sendError(res, 500, "Internal Server Error", error instanceof Error ? error.message : "Unknown error");
   }
-
-  const isPasswordValid = await bcrypt.compare(password, existUser.password);
-
-  if (!isPasswordValid) {
-    return res.status(400).json({
-      message: "Invalid credentials with password",
-    });
-  }
-
-  const accessToken = signAccessToken(existUser);
-
-  res.status(200).json({
-    message: "User logged in successfully",
-    data: {
-      id: existUser._id,
-      email: existUser.email,
-      accessToken: accessToken,
-      roles: existUser.roles,
-    },
-  });
 };

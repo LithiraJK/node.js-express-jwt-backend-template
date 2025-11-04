@@ -9,7 +9,12 @@ import { env } from "./config/env";
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: [env.CORS_ORIGIN],
+    methods: ["GET", "POST", "PUT", "DELETE"] // optional
+  })
+)
 
 app.use("/api/v1/auth" , authRouter );
 
@@ -24,6 +29,7 @@ mongoose
     process.exit(1);
   });
   
+
 app.listen(process.env.PORT, () => {
   console.log(
     `Server is running on http://${env.HOST}:${env.PORT}`
